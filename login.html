@@ -287,12 +287,11 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxldZnRE3QbH7NEKWLzoqs_cz_osoro40-JP89YjnGuQurGpR7uA1ToaDWrX-NDrKnZQQ/exec";
 // ฟังก์ชันกลางสำหรับติดต่อ Google Apps Script (ฉบับแก้ไข CORS)
-// แก้ใน login.html
 async function callAPI(action, payload) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            // [ต้องเพิ่มตรงนี้]
+            // [ต้องมีบรรทัดนี้] เพื่อให้ Google Script ยอมรับข้อมูล
             headers: { "Content-Type": "text/plain;charset=utf-8" }, 
             body: JSON.stringify({ action: action, payload: payload })
         });
@@ -330,10 +329,10 @@ async function callAPI(action, payload) {
             icon.classList.replace('bg-gray-800','bg-orange-100'); icon.classList.replace('text-white','text-orange-600'); icon.innerHTML='<i class="fi fi-sr-lock text-3xl mt-1"></i>';
         }
     }
-async function handleLogin(e) { // เพิ่ม async
-        e.preventDefault();
-        const btn = document.getElementById('btnLogin');
-        const originalText = btn.innerHTML;
+async function handleLogin(e) { 
+    e.preventDefault();
+    const btn = document.getElementById('btnLogin');
+    const originalText = btn.innerHTML;
         
         // Show Loading
         btn.innerHTML = '<div class="flex items-center justify-center gap-3"><span class="loader"></span> <span>กำลังตรวจสอบ...</span></div>'; 
