@@ -271,23 +271,20 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxldZnRE3QbH7NEKWLzoqs_cz_osoro40-JP89YjnGuQurGpR7uA1ToaDWrX-NDrKnZQQ/exec";
 // ฟังก์ชันกลางสำหรับติดต่อ Google Apps Script (ฉบับแก้ไข CORS)
+// แก้ใน login.html
 async function callAPI(action, payload) {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            // [สำคัญ] ต้องระบุแบบนี้เพื่อไม่ให้ Browser ส่ง Preflight Request (OPTIONS) ที่ทำให้ GAS เอ๋อ
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8", 
-            },
+            // [ต้องเพิ่มตรงนี้]
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
             body: JSON.stringify({ action: action, payload: payload })
         });
-        
         const result = await response.json();
         return result;
-
     } catch (error) {
         console.error("API Error:", error);
-        return { status: 'error', message: 'เชื่อมต่อ Server ไม่ได้ กรุณาลองใหม่' };
+        return { status: 'error', message: 'เชื่อมต่อ Server ไม่ได้' };
     }
 }
     let currentUser = null, html5QrCode = null, isStaffMode = false, checkinHistory = [];
@@ -344,6 +341,7 @@ async function handleLogin(e) { // เพิ่ม async
     }
 function switchView(role) {
         document.getElementById('view-login').classList.add('hidden');
+  stopUserPolling();
         if (role === 'admin') {
             document.getElementById('view-admin').classList.remove('hidden');
            // --- [Start] Logic ล็อกวันที่ตามเงื่อนไข (ก.พ. 2569) ---
@@ -383,10 +381,12 @@ function switchView(role) {
         } else if (role === 'user') {
             document.getElementById('view-user').classList.remove('hidden');
             renderUserPage(currentUser.userData);
+          startUserPolling();
         }
     }
 
     function logout() {
+      stopUserPolling(); // [เพิ่ม] หยุดดึงข้อมูลทันทีที่ออก
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
         currentUser=null; checkinHistory=[];
         ['view-admin','view-sponsor','view-user'].forEach(id=>document.getElementById(id).classList.add('hidden'));
@@ -394,7 +394,52 @@ function switchView(role) {
         document.getElementById('username').value=''; document.getElementById('password').value='';
         if(isStaffMode) toggleStaffMode();
     }
+// ตัวแปรสำหรับเก็บ Interval (ตัวนับเวลา)
+    let pollingInterval = null;
 
+    // ฟังก์ชันเริ่มดึงข้อมูลอัตโนมัติ (เรียกเมื่อเข้าหน้า User View)
+    function startUserPolling() {
+        if (pollingInterval) clearInterval(pollingInterval); // เคลียร์ของเก่าก่อน
+        
+        // ตั้งเวลาให้ดึงข้อมูลทุกๆ 3 วินาที (3000ms)
+        pollingInterval = setInterval(async () => {
+            if (!currentUser || !currentUser.userData || !currentUser.userData.id) return;
+
+            // เรียก API แบบเงียบๆ (ไม่โชว์ Loading)
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        action: 'get_user_update', 
+                        payload: { userId: currentUser.userData.id } 
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    // เปรียบเทียบข้อมูลเก่ากับใหม่ ถ้าจำนวนคูปอง หรือ สถานะเปลี่ยน ให้เรนเดอร์ใหม่
+                    const oldJson = JSON.stringify(currentUser.userData.coupons);
+                    const newJson = JSON.stringify(data.coupons);
+                    
+                    if (oldJson !== newJson) {
+                        console.log("Data updated!");
+                        currentUser.userData.coupons = data.coupons; // อัปเดตข้อมูลในตัวแปรหลัก
+                        renderUserPage(currentUser.userData); // วาดหน้าจอใหม่ทันที
+                    }
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 3000); // 3 วินาที
+    }
+
+    // ฟังก์ชันหยุดดึงข้อมูล (เรียกเมื่อ Logout หรือสลับหน้า)
+    function stopUserPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    }
     // --- ADMIN DATE SELECTION ---
     function selectDate(date) {
         selectedAdminDate = date;
@@ -618,14 +663,27 @@ function showCouponQR(code) {
         });
     }
 
-    function startScanner(el, type) {
+function startScanner(el, type) {
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
+        
         html5QrCode = new Html5Qrcode(el);
-        html5QrCode.start({facingMode:"environment"}, {fps:10, qrbox:{width:250,height:250}}, (txt)=>{
-            html5QrCode.pause(); processCheckin(type, txt);
-        }, ()=>{}).catch(e=>{ document.getElementById(el).innerHTML='<div class="text-red-500 p-8 text-center">เปิดกล้องไม่ได้</div>'; });
+        
+        // Config ใหม่: เร็วขึ้น + ตรงกรอบ
+        const config = {
+            fps: 20, // เพิ่ม FPS (ของเดิม 10)
+            qrbox: { width: 250, height: 250 }, // ขนาดเท่ากรอบ CSS
+            aspectRatio: 1.0,
+            // [สำคัญ] อ่านเฉพาะ QR Code (ตัด Barcode ทิ้ง)
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
+        };
+
+        html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
+            html5QrCode.pause(); 
+            processCheckin(type, txt);
+        }, () => {}).catch(err => {
+            document.getElementById(el).innerHTML = '<div class="text-red-500 p-8 text-center">เปิดกล้องไม่ได้</div>'; 
+        });
     }
-    // เติมฟังก์ชันนี้ต่อท้ายสุดใน <script>
     function updateDashboard(stats) { 
         if(!stats) return; 
         // เช็คก่อนว่ามี Element นี้ไหม (เผื่อ Sponsor ไม่มี Dashboard)
