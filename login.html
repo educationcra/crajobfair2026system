@@ -37,57 +37,7 @@
     .scanner-wrapper { position: relative; width: 100%; height: 320px; background: black; border-radius: 1rem; overflow: hidden; }
     #reader-admin, #reader-sponsor { width: 100%; height: 100%; object-fit: cover; }
     .scan-overlay { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; }
-   /* แก้ไข .scan-box ให้เป็นจัตุรัสเสมอ */
-  /* [แก้ไข] บังคับให้เป็นจัตุรัสด้วย pixel ตายตัวไปเลย */
-    .scan-box {
-        width: 250px !important;
-        height: 250px !important; /* บังคับความสูงเท่าความกว้างเป๊ะๆ */
-        
-        position: relative;
-        /* เงาขอบดำทึบเพื่อให้เห็นช่องเจาะชัดเจน */
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6); 
-        border-radius: 24px; /* มุมมนสวยๆ */
-        
-        /* จัดให้อยู่กึ่งกลาง overlay */
-        margin: auto;
-        z-index: 30;
-        
-        /* ใส่กรอบเส้นบางๆ สีขาวจางๆ เพื่อเน้นขอบเขต */
-        border: 2px solid rgba(255, 255, 255, 0.3);
-    }
-
-    /* ซ่อนกรอบมุมทั้ง 4 อันเดิมทิ้งไปเลย (เพราะมันอาจจะเบี้ยว) */
-    .scan-corner {
-        display: none !important;
-    }
-
-    /* สร้างกรอบมุมใหม่ด้วย pseudo-elements (รับประกันความเป๊ะ) */
-    .scan-box::before,
-    .scan-box::after {
-        content: '';
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        border: 4px solid #4ade80; /* สีเขียว (Tailwind green-400) */
-        border-radius: 4px;
-        transition: all 0.3s ease;
-    }
-
-    /* มุมบนซ้าย + บนขวา */
-    .scan-box::before {
-        top: -2px; left: -2px;
-        border-right: none; border-bottom: none;
-        box-shadow: 210px 0 0 0 #4ade80; /* ใช้เงาสร้างมุมขวาบน */
-    }
-
-    /* มุมล่างซ้าย + ล่างขวา */
-    .scan-box::after {
-        bottom: -2px; left: -2px;
-        border-right: none; border-top: none;
-        box-shadow: 210px 0 0 0 #4ade80; /* ใช้เงาสร้างมุมขวาล่าง */
-    }
-
-    /* เพิ่ม CSS นี้เพื่อบังคับวิดีโอไม่ให้ยืด/หดจนเพี้ยน */
+  
     #reader-admin video, #reader-sponsor video {
         object-fit: cover !important;
         border-radius: 1rem;
@@ -198,14 +148,7 @@
 
               <div id="admin-scan-section">
                   <div class="scanner-wrapper shadow-lg mb-4">
-                      <div id="reader-admin"></div>
-                      <div class="scan-overlay">
-                          <div class="scan-box">
-                              <div class="scan-corner c-tl border-orange-500"></div><div class="scan-corner c-tr border-orange-500"></div><div class="scan-corner c-bl border-orange-500"></div><div class="scan-corner c-br border-orange-500"></div>
-                              <div class="absolute w-full h-0.5 bg-orange-500/80 top-1/2 shadow-[0_0_10px_#f97316] animate-pulse"></div>
-                          </div>
-                      </div>
-                  </div>
+                      <div id="reader-admin"></div></div>
                   <p class="text-center text-xs text-gray-400">กำลังเช็คอินสำหรับวันที่: <span id="current-date-display" class="font-bold text-orange-600">12 ก.พ.</span></p>
               </div>
 
@@ -715,19 +658,16 @@ function showCouponQR(code) {
     }
 
 function startScanner(el, type) {
-        // เคลียร์ของเก่าก่อนเริ่มใหม่
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
-
         html5QrCode = new Html5Qrcode(el);
-const config = {
+        
+        const config = {
             fps: 20,
-            // กำหนดขนาดพื้นที่รับภาพเป็นจัตุรัส
-            qrbox: { width: 250, height: 250 },
-            // บังคับสัดส่วน 1:1
+            // กำหนดขนาดพื้นที่สแกน (ลดลงหน่อยเพื่อให้เหลือขอบ)
+            qrbox: { width: 220, height: 220 }, 
+            // [สำคัญ] บังคับสัดส่วน 1.0 คือ จัตุรัส
             aspectRatio: 1.0, 
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-            // ปิด UI เดิมของ Library (ถ้าทำได้)
-            showTorchButtonIfSupported: true
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
         };
 
         html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
