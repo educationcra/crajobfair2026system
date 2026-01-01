@@ -36,32 +36,69 @@
     /* Scanner & Mask */
     .scanner-wrapper { position: relative; width: 100%; height: 320px; background: black; border-radius: 1rem; overflow: hidden; }
     #reader-admin, #reader-sponsor { width: 100%; height: 100%; object-fit: cover; }
-    
-    /* CSS ซ่อนกรอบเขียวของ Library (ไม้ตาย) */
-    #reader-admin > div:nth-of-type(2), #reader-sponsor > div:nth-of-type(2) { display: none !important; }
-    
     .scan-overlay { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; }
-    
-    /* [แก้ตรงนี้] บังคับขนาดเป็นจัตุรัส 250x250 px เป๊ะๆ */
-    .scan-box { 
-        width: 250px !important; 
-        height: 250px !important; 
-        position: relative; 
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6); /* เงาดำทึบขึ้น */
-        border-radius: 20px; 
-        border: 2px solid rgba(255,255,255,0.5); /* เส้นขอบขาวจางๆ */
+   /* แก้ไข .scan-box ให้เป็นจัตุรัสเสมอ */
+    .scan-box {
+        width: 250px;
+        /* ลบ height: 250px; ของเดิมออก หรือแก้เป็น auto */
+        height: auto; 
+        /* เพิ่มบรรทัดนี้สำคัญมาก! บังคับสัดส่วน 1:1 */
+        aspect-ratio: 1 / 1; 
+        
+        position: relative;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); /* ปรับสีดำให้จางลงหน่อยจะได้เห็นภาพรอบๆ */
+        border-radius: 20px; /* ปรับมุมมนให้สวยขึ้น */
+        z-index: 30;
     }
-    
-    .scan-corner { position: absolute; width: 40px; height: 40px; border-style: solid; border-width: 5px; border-radius: 4px; }
+
+    /* เพิ่ม CSS นี้เพื่อบังคับวิดีโอไม่ให้ยืด/หดจนเพี้ยน */
+    #reader-admin video, #reader-sponsor video {
+        object-fit: cover !important;
+        border-radius: 1rem;
+    }
+    .scan-corner { position: absolute; width: 30px; height: 30px; border-style: solid; border-width: 4px; border-radius: 4px; }
     .c-tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
     .c-tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
     .c-bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; }
     .c-br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
-    
-    /* Loader */
-    .loader { width: 22.4px; height: 22.4px; color: #ffffff; position: relative; background: radial-gradient(5.6px, currentColor 94%, #0000); }
-    .loader:before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(5.04px at bottom right, #0000 94%, currentColor) top left, radial-gradient(5.04px at bottom left, #0000 94%, currentColor) top right, radial-gradient(5.04px at top right, #0000 94%, currentColor) bottom left, radial-gradient(5.04px at top left, #0000 94%, currentColor) bottom right; background-size: 11.2px 11.2px; background-repeat: no-repeat; animation: loader 1.5s infinite cubic-bezier(0.3, 1, 0, 1); }
-    @keyframes loader { 33% { inset: -5.6px; transform: rotate(0deg); } 66% { inset: -5.6px; transform: rotate(90deg); } 100% { inset: 0; transform: rotate(90deg); } }
+/* --- CSS Loader Animation (ย่อขนาดให้พอดีปุ่ม) --- */
+.loader {
+  width: 22.4px;
+  height: 22.4px;
+  color: #ffffff; /* เปลี่ยนเป็นสีขาวให้เข้ากับปุ่มส้ม */
+  position: relative;
+  background: radial-gradient(5.6px, currentColor 94%, #0000);
+}
+
+.loader:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: 
+    radial-gradient(5.04px at bottom right, #0000 94%, currentColor) top left,
+    radial-gradient(5.04px at bottom left, #0000 94%, currentColor) top right,
+    radial-gradient(5.04px at top right, #0000 94%, currentColor) bottom left,
+    radial-gradient(5.04px at top left, #0000 94%, currentColor) bottom right;
+  background-size: 11.2px 11.2px;
+  background-repeat: no-repeat;
+  animation: loader 1.5s infinite cubic-bezier(0.3, 1, 0, 1);
+}
+
+@keyframes loader {
+  33% {
+    inset: -5.6px;
+    transform: rotate(0deg);
+  }
+  66% {
+    inset: -5.6px;
+    transform: rotate(90deg);
+  }
+  100% {
+    inset: 0;
+    transform: rotate(90deg);
+  }
+}
   </style>
 </head>
 <body class="bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 min-h-screen p-4 flex flex-col items-center justify-center">
@@ -74,16 +111,19 @@
 
   <div class="w-full max-w-4xl relative z-10 flex justify-center">
 
-      <div id="view-login" class="w-full max-w-md animate-fade-in">
+<div id="view-login" class="w-full max-w-md animate-fade-in">
           <div class="glass-panel p-8 text-center border border-white relative overflow-hidden">
+              
               <div onclick="toggleStaffMode()" class="absolute top-4 right-4 cursor-pointer group z-20 p-2 rounded-full hover:bg-orange-50 transition-colors">
                   <i class="fi fi-sr-settings text-2xl text-gray-300 group-hover:text-orange-500 transition-colors"></i>
               </div>
+
               <div class="mb-6 flex justify-center">
                   <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 shadow-inner" id="login-icon">
                       <i class="fi fi-sr-lock text-3xl mt-1"></i>
                   </div>
               </div>
+              
               <h2 class="text-2xl font-bold text-gray-800 mb-2" id="login-title">เข้าสู่ระบบ</h2>
               <p class="text-gray-500 mb-8 text-sm" id="login-subtitle">สำหรับผู้เข้าร่วมงาน</p>
               
@@ -103,12 +143,9 @@
 
       <div id="view-admin" class="w-full max-w-lg hidden">
           <div class="glass-panel p-6 border border-white mb-4">
-              <div class="flex justify-between items-center mb-4">
-                  <h2 class="text-xl font-bold text-gray-800"><i class="fi fi-sr-shield-check text-orange-500 mr-2"></i>Admin</h2>
-                  <button onclick="logout()" class="flex items-center gap-2 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-red-600 transition-colors shadow-sm">
+              <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-gray-800"><i class="fi fi-sr-shield-check text-orange-500 mr-2"></i>Admin</h2><button onclick="logout()" class="flex items-center gap-2 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-xl hover:bg-red-600 transition-colors shadow-sm">
                       <i class="fi fi-sr-sign-out-alt"></i> ออกจากระบบ
-                  </button>
-              </div>
+                  </button></div>
               
               <div class="flex justify-center mb-4">
                   <div class="bg-gray-100 p-1 rounded-xl flex shadow-inner">
@@ -150,7 +187,7 @@
           </div>
       </div>
 
-      <div id="view-sponsor" class="w-full max-w-lg hidden">
+<div id="view-sponsor" class="w-full max-w-lg hidden">
           <div class="glass-panel p-6 border border-white">
               
               <div class="flex justify-between items-center mb-6">
@@ -190,8 +227,7 @@
               </div>
 
               <div id="sponsor-manual-section" class="hidden min-h-[18rem] flex flex-col items-center justify-center">
-                  <div class="w-full px-2">
-                      <label class="block text-base font-bold text-gray-700 mb-4 text-center">กรอกรหัสคูปอง</label>
+                  <div class="w-full px-2"> <label class="block text-base font-bold text-gray-700 mb-4 text-center">กรอกรหัสคูปอง</label>
                       
                       <div class="flex items-center justify-center gap-1 mb-8">
                           <div class="flex items-center">
@@ -199,14 +235,16 @@
                               <span class="text-gray-300 font-bold text-xl mx-0.5">-</span>
                               <input type="tel" id="sp-input-id" class="w-24 py-2 rounded-xl border-2 border-gray-200 text-center font-bold text-xl focus:border-orange-500 outline-none tracking-widest" placeholder="0000" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                           </div>
-                          <span class="text-gray-300 font-bold text-xl">-</span>
                           
+                          <span class="text-gray-300 font-bold text-xl">-</span>
+
                           <select id="sp-input-date" class="bg-gray-50 border-2 border-gray-200 text-gray-800 text-xl font-bold rounded-xl py-2 pl-4 pr-8 focus:border-orange-500 outline-none appearance-none text-center w-20 relative z-10" style="text-align-last: center;">
-                              <option value="12">12</option>
-                              <option value="13">13</option>
+                          <option value="12">12</option>
+                          <option value="13">13</option>
                           </select>
 
                           <span class="text-gray-300 font-bold text-xl">-</span>
+
                           <input type="tel" id="sp-input-index" class="w-12 py-2 rounded-xl border-2 border-gray-200 text-center font-bold text-xl focus:border-orange-500 outline-none" placeholder="1" maxlength="1" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                       </div>
 
@@ -215,7 +253,6 @@
                       </button>
                   </div>
               </div>
-
               <div class="mt-8 border-t border-gray-100 pt-6">
                   <h3 class="text-base font-bold text-gray-700 mb-4 flex items-center">
                       <i class="fi fi-sr-time-past text-orange-500 mr-2"></i> รายการล่าสุด
@@ -226,7 +263,6 @@
               </div>
           </div>
       </div>
-
       <div id="view-user" class="w-full max-w-md hidden">
           <div class="glass-panel p-6 border border-white min-h-[80vh] relative flex flex-col">
               <div class="flex justify-between items-start mb-6">
@@ -235,7 +271,7 @@
               </div>
               <div onclick="showMyQR()" class="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-6 text-white shadow-xl mb-8 relative overflow-hidden group cursor-pointer active:scale-95 transition">
                   <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full transform translate-x-10 -translate-y-10"></div>
-                  <div class="flex items-center gap-4 relative z-10"><div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center"><i class="fi fi-sr-qr-scan text-2xl"></i></div><div><h3 class="text-xl font-bold">เช็คอินหน้างาน</h3><p class="text-white/80 text-xs mt-0.5">กดแสดง QR Code</p></div></div>
+                  <div class="flex items-center gap-4 relative z-10"><div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center"><i class="fi fi-sr-mode-portrait text-xl flex items-center justify-center"></i></div><div><h3 class="text-xl font-bold">เช็คอินหน้างาน</h3><p class="text-white/80 text-xs mt-0.5">กดแสดง QR Code</p></div></div>
               </div>
               <div class="flex-1">
                   <h3 class="font-bold text-gray-800 mb-4 flex items-center">
@@ -250,24 +286,25 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxldZnRE3QbH7NEKWLzoqs_cz_osoro40-JP89YjnGuQurGpR7uA1ToaDWrX-NDrKnZQQ/exec";
-
-    async function callAPI(action, payload) {
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: action, payload: payload })
-            });
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error("API Error:", error);
-            return { status: 'error', message: 'เชื่อมต่อ Server ไม่ได้ กรุณาลองใหม่' };
-        }
+// ฟังก์ชันกลางสำหรับติดต่อ Google Apps Script (ฉบับแก้ไข CORS)
+// แก้ใน login.html
+async function callAPI(action, payload) {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            // [ต้องเพิ่มตรงนี้]
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+            body: JSON.stringify({ action: action, payload: payload })
+        });
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error("API Error:", error);
+        return { status: 'error', message: 'เชื่อมต่อ Server ไม่ได้' };
     }
-
+}
     let currentUser = null, html5QrCode = null, isStaffMode = false, checkinHistory = [];
-    let selectedAdminDate = '12'; 
-    let pollingInterval = null; // ตัวแปรสำหรับ Polling
+    let selectedAdminDate = '12'; // Default Date for Admin
 
     function formatPhoneLogin(input) {
         if(isStaffMode) return; 
@@ -293,14 +330,16 @@
             icon.classList.replace('bg-gray-800','bg-orange-100'); icon.classList.replace('text-white','text-orange-600'); icon.innerHTML='<i class="fi fi-sr-lock text-3xl mt-1"></i>';
         }
     }
-
-    async function handleLogin(e) {
+async function handleLogin(e) { // เพิ่ม async
         e.preventDefault();
         const btn = document.getElementById('btnLogin');
         const originalText = btn.innerHTML;
+        
+        // Show Loading
         btn.innerHTML = '<div class="flex items-center justify-center gap-3"><span class="loader"></span> <span>กำลังตรวจสอบ...</span></div>'; 
         btn.disabled = true;
 
+        // เรียก API
         const res = await callAPI('login', { 
             username: document.getElementById('username').value, 
             password: document.getElementById('password').value 
@@ -316,14 +355,73 @@
             Swal.fire({icon:'error', title:'ไม่สำเร็จ', text:res.message, confirmButtonColor:'#f97316'}); 
         }
     }
+function switchView(role) {
+        document.getElementById('view-login').classList.add('hidden');
+  stopUserPolling();
+        if (role === 'admin') {
+            document.getElementById('view-admin').classList.remove('hidden');
+           // --- [Start] Logic ล็อกวันที่ตามเงื่อนไข (ก.พ. 2569) ---
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1; // 1-12
+            const day = today.getDate();
+            const btn12 = document.getElementById('btn-date-12');
+            const btn13 = document.getElementById('btn-date-13');
+            // 1. รีเซ็ตปุ่มให้แสดงครบก่อน (สำหรับวันปกติ)
+            btn12.style.display = 'inline-block';
+            btn13.style.display = 'inline-block';
+            // 2. เช็คเงื่อนไขเฉพาะเดือน ก.พ. ปี 2026 (พ.ศ. 2569)
+            if (year === 2026 && month === 2) {
+                if (day === 12) {
+                    // 🔒 วันที่ 12: บังคับเลือก 12, ซ่อน 13 (Bank ไว้)
+                    selectDate('12');
+                    btn13.style.display = 'none'; 
+                } else if (day === 13) {
+                    // 🔒 วันที่ 13: บังคับเลือก 13, ซ่อน 12 (Back ไว้)
+                    selectDate('13');
+                    btn12.style.display = 'none';
+                } else {
+                    // 🔓 วันอื่นๆ (ก่อน 12 หรือหลัง 13): สลับได้ปกติ
+                    selectDate('12'); // เลือก 12 เป็นค่าเริ่มต้น
+                }
+            } else {
+                // 🔓 ปี/เดือน อื่นๆ (เช่น ตอนทดสอบระบบวันนี้): สลับได้ปกติ
+                selectDate('12');
+            }
 
-    // ฟังก์ชันเริ่มดึงข้อมูลอัตโนมัติ (Polling)
+            startScanner('reader-admin', 'admin'); 
+            
+        } else if (role === 'sponsor') {
+            document.getElementById('view-sponsor').classList.remove('hidden');
+            switchSponsorTab('scan');
+        } else if (role === 'user') {
+            document.getElementById('view-user').classList.remove('hidden');
+            renderUserPage(currentUser.userData);
+          startUserPolling();
+        }
+    }
+
+    function logout() {
+      stopUserPolling(); // [เพิ่ม] หยุดดึงข้อมูลทันทีที่ออก
+        if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
+        currentUser=null; checkinHistory=[];
+        ['view-admin','view-sponsor','view-user'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+        const lv=document.getElementById('view-login'); lv.classList.remove('hidden','animate-fade-in'); void lv.offsetWidth; lv.classList.add('animate-fade-in');
+        document.getElementById('username').value=''; document.getElementById('password').value='';
+        if(isStaffMode) toggleStaffMode();
+    }
+// ตัวแปรสำหรับเก็บ Interval (ตัวนับเวลา)
+    let pollingInterval = null;
+
+    // ฟังก์ชันเริ่มดึงข้อมูลอัตโนมัติ (เรียกเมื่อเข้าหน้า User View)
     function startUserPolling() {
-        if (pollingInterval) clearInterval(pollingInterval);
+        if (pollingInterval) clearInterval(pollingInterval); // เคลียร์ของเก่าก่อน
         
+        // ตั้งเวลาให้ดึงข้อมูลทุกๆ 3 วินาที (3000ms)
         pollingInterval = setInterval(async () => {
             if (!currentUser || !currentUser.userData || !currentUser.userData.id) return;
 
+            // เรียก API แบบเงียบๆ (ไม่โชว์ Loading)
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
@@ -335,66 +433,30 @@
                 const data = await res.json();
                 
                 if (data.status === 'success') {
+                    // เปรียบเทียบข้อมูลเก่ากับใหม่ ถ้าจำนวนคูปอง หรือ สถานะเปลี่ยน ให้เรนเดอร์ใหม่
                     const oldJson = JSON.stringify(currentUser.userData.coupons);
                     const newJson = JSON.stringify(data.coupons);
                     
                     if (oldJson !== newJson) {
                         console.log("Data updated!");
-                        currentUser.userData.coupons = data.coupons;
-                        renderUserPage(currentUser.userData);
+                        currentUser.userData.coupons = data.coupons; // อัปเดตข้อมูลในตัวแปรหลัก
+                        renderUserPage(currentUser.userData); // วาดหน้าจอใหม่ทันที
                     }
                 }
-            } catch (e) { console.error("Polling error", e); }
-        }, 3000); 
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }, 3000); // 3 วินาที
     }
 
+    // ฟังก์ชันหยุดดึงข้อมูล (เรียกเมื่อ Logout หรือสลับหน้า)
     function stopUserPolling() {
-        if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
-    }
-
-    function switchView(role) {
-        document.getElementById('view-login').classList.add('hidden');
-        stopUserPolling(); // หยุด Polling เก่าก่อนเสมอ
-
-        if (role === 'admin') {
-            document.getElementById('view-admin').classList.remove('hidden');
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1; 
-            const day = today.getDate();
-            const btn12 = document.getElementById('btn-date-12');
-            const btn13 = document.getElementById('btn-date-13');
-            btn12.style.display = 'inline-block';
-            btn13.style.display = 'inline-block';
-            
-            if (year === 2026 && month === 2) {
-                if (day === 12) { selectDate('12'); btn13.style.display = 'none'; } 
-                else if (day === 13) { selectDate('13'); btn12.style.display = 'none'; } 
-                else { selectDate('12'); }
-            } else { selectDate('12'); }
-
-            startScanner('reader-admin', 'admin'); 
-            
-        } else if (role === 'sponsor') {
-            document.getElementById('view-sponsor').classList.remove('hidden');
-            switchSponsorTab('scan');
-        } else if (role === 'user') {
-            document.getElementById('view-user').classList.remove('hidden');
-            renderUserPage(currentUser.userData);
-            startUserPolling(); // เริ่ม Polling สำหรับ User
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
         }
     }
-
-    function logout() {
-        stopUserPolling();
-        if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
-        currentUser=null; checkinHistory=[];
-        ['view-admin','view-sponsor','view-user'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-        const lv=document.getElementById('view-login'); lv.classList.remove('hidden','animate-fade-in'); void lv.offsetWidth; lv.classList.add('animate-fade-in');
-        document.getElementById('username').value=''; document.getElementById('password').value='';
-        if(isStaffMode) toggleStaffMode();
-    }
-
+    // --- ADMIN DATE SELECTION ---
     function selectDate(date) {
         selectedAdminDate = date;
         const btn12 = document.getElementById('btn-date-12');
@@ -430,15 +492,19 @@
         document.getElementById('manual-cv-input').value='';
     }
 
-    async function processCheckin(type, content) { 
+// 1. แก้ processCheckin ให้เรียก addHistoryItem ของ Sponsor ด้วย
+// เปลี่ยนจาก google.script.run เป็น callAPI
+    async function processCheckin(type, content) { // เพิ่ม async
         let extraData = "";
         if (type === 'admin') extraData = selectedAdminDate; 
         else if (type === 'sponsor' && currentUser) extraData = currentUser.name; 
 
+        // หยุดกล้องชั่วคราว
         if(type !== 'manual_admin' && html5QrCode) {
             try { html5QrCode.pause(); } catch(e) {}
         }
 
+        // เรียก API
         const res = await callAPI('scan', {
             type: type,
             content: content,
@@ -460,19 +526,27 @@
         } else {
             Swal.fire({icon:'error', title:'ผิดพลาด', text:res.message, confirmButtonText:'ตกลง', confirmButtonColor:'#ef4444'}).then(resume);
         }
+        
         if(res.dashboard) updateDashboard(res.dashboard);
     }
-
+    // 2. ปรับ addHistoryItem ให้รองรับการแยกกล่อง (Target Container)
     function addHistoryItem(data, type) {
+        // เลือกกล่องที่จะแสดงผล (Admin หรือ Sponsor)
         const containerId = (type === 'sponsor') ? 'sponsor-history-list' : 'checkin-history-list';
+        
         checkinHistory.unshift(data); 
         if(checkinHistory.length > 5) checkinHistory.pop();
+        
         const box = document.getElementById(containerId); 
-        if(!box) return; 
+        if(!box) return; // กัน Error
+        
         box.innerHTML = '';
+        
         checkinHistory.forEach(item => {
+            // ปรับสีไอคอนนิดหน่อย ถ้าเป็น Sponsor ให้เป็นสีส้ม/เหลืองตามธีมร้านค้า
             const iconColor = (type === 'sponsor') ? 'text-orange-500 bg-orange-100' : 'text-green-600 bg-green-100';
             const iconClass = (type === 'sponsor') ? 'fi-sr-ticket' : 'fi-sr-check';
+
             box.innerHTML += `
             <div class="history-card bg-white border border-gray-100 rounded-xl p-3 flex items-center gap-3 shadow-sm mb-2">
                 <div class="w-10 h-10 rounded-full ${iconColor} flex items-center justify-center shrink-0">
@@ -491,29 +565,44 @@
         });
     }
 
-    function renderUserPage(data) {
+ function renderUserPage(data) {
         document.getElementById('user-name').innerText = 'สวัสดี, ' + data.name;
         document.getElementById('user-id').innerText = data.id;
+        
         const box = document.getElementById('coupon-list'); 
         box.innerHTML = '';
+        
         if(!data.coupons || data.coupons.length === 0) { 
             box.innerHTML = '<div class="text-center text-gray-400 py-8 border border-dashed rounded-xl">ไม่มีคูปอง</div>'; 
             return; 
         }
+        
         data.coupons.forEach(c => {
             const isUsed = c.status === 'Used';
+            // ดึงเลขวันที่จากรหัส (เช่น CV0001-12-1 เอาเลข 12 มา)
             const dateCode = c.code.split('-')[1]; 
+
+            // --- กำหนดธีมสี ---
             let bgStart, bgEnd, txtColor, iconColor, iconBg;
+
             if (isUsed) {
+                // 🔘 สีเทา (ใช้แล้ว)
                 bgStart='#f3f4f6'; bgEnd='#e5e7eb'; 
                 txtColor='#9ca3af'; iconColor='#9ca3af'; iconBg='#e5e7eb';
             } else if (dateCode === '13') {
-                bgStart='#fff1f2'; bgEnd='#fecdd3'; 
-                txtColor='#9f1239'; iconColor='#f43f5e'; iconBg='#ffe4e6';
+                // 🔴 วันที่ 13: ส้มอมแดงอ่อน (Rose/Red Tone)
+                bgStart='#fff1f2'; bgEnd='#fecdd3'; // ไล่เฉดชมพูอ่อนๆ
+                txtColor='#9f1239'; // สีตัวหนังสือแดงเข้ม
+                iconColor='#f43f5e'; // ไอคอนแดง
+                iconBg='#ffe4e6';    // พื้นหลังไอคอน
             } else {
-                bgStart='#fff7ed'; bgEnd='#fed7aa'; 
-                txtColor='#c2410c'; iconColor='#f97316'; iconBg='#ffedd5';
+                // 🟠 วันที่ 12 (Default): ส้มอ่อน (Orange Tone)
+                bgStart='#fff7ed'; bgEnd='#fed7aa'; // ไล่เฉดส้มอ่อน
+                txtColor='#c2410c'; // สีตัวหนังสือส้มเข้ม
+                iconColor='#f97316'; // ไอคอนส้ม
+                iconBg='#ffedd5';    // พื้นหลังไอคอน
             }
+
             const html = `
             <div class="coupon-card w-full h-28 relative ${isUsed?'coupon-used':''}" onclick="${isUsed?'':`showCouponQR('${c.code}')`}">
                 <svg viewBox="0 0 400 120" class="w-full h-full drop-shadow-md" preserveAspectRatio="none">
@@ -530,6 +619,7 @@
                         </linearGradient>
                     </defs>
                     <rect width="400" height="120" fill="url(#grad-${c.code})" mask="url(#cut-${c.code})" rx="12"/>
+                    
                     <div class="absolute inset-0 flex items-center">
                         <div class="flex-1 pl-6 flex items-center gap-4">
                             <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style="background-color:${iconBg}">
@@ -544,32 +634,40 @@
                             </div>
                         </div>
                         <div class="w-[100px] text-center pr-2">
-                            ${isUsed ? '<span class="text-xs font-bold text-white bg-gray-500 px-3 py-1 rounded-full">ใช้แล้ว</span>' : `<i class="fi fi-sr-qr-code text-3xl" style="color:${txtColor}"></i>`}
+                            ${isUsed ? 
+                                '<span class="text-xs font-bold text-white bg-gray-500 px-3 py-1 rounded-full">ใช้แล้ว</span>' : 
+                                `<i class="fi fi-sr-qr-code text-3xl" style="color:${txtColor}"></i>`
+                            }
                         </div>
                     </div>
                 </svg>
             </div>`;
+            
             box.innerHTML += html;
         });
     }
 
     function showMyQR() { Swal.fire({title:'<span class="text-orange-600">QR Code ของคุณ</span>', html:`<div class="bg-white p-2 inline-block rounded-lg"><img src="https://quickchart.io/qr?text=${currentUser.userData.id}&size=250" class="mx-auto border"></div>`, showCloseButton:true, showConfirmButton:false}); }
-
-    function showCouponQR(code) {
+    // --- ฟังก์ชันแสดง QR Code คูปอง (ปรับดีไซน์ใหม่) ---
+function showCouponQR(code) {
         Swal.fire({
             html: `
                 <div class="flex flex-col items-center pt-2 pb-4">
+                    
                     <div class="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-4 shadow-inner ring-4 ring-white">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
                            <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.83 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v7h6V6c0-2.76-2.24-5-5-5h-1v5zM17 22h2.5v-9h-2.5v9z"/>
                         </svg>
                     </div>
+
                     <h3 class="text-2xl font-bold text-gray-800 mb-1">คูปองอาหาร</h3>
                     <p class="text-xs text-gray-400 mb-6">แสดง QR Code นี้ให้ร้านค้าสแกน</p>
+
                     <div class="bg-white p-3 rounded-2xl border-2 border-dashed border-orange-200 shadow-sm mb-6 relative group cursor-pointer transition-transform hover:scale-105">
                         <img src="https://quickchart.io/qr?text=${code}&size=300" class="w-48 h-48 object-contain rounded-lg mx-auto">
                         <div class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md animate-bounce">SCAN ME</div>
                     </div>
+
                     <div class="bg-gray-50 text-orange-600 font-mono text-xl font-bold px-8 py-3 rounded-xl border border-gray-200 tracking-widest shadow-sm select-all">
                         ${code}
                     </div>
@@ -581,29 +679,41 @@
         });
     }
 
-    function startScanner(el, type) {
+function startScanner(el, type) {
+        // เคลียร์ของเก่าก่อนเริ่มใหม่
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
         html5QrCode = new Html5Qrcode(el);
-        const config = {
+const config = {
             fps: 20,
-            qrbox: { width: 250, height: 250 }, 
+            qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0, 
             formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-            showTorchButtonIfSupported: true 
+            showTorchButtonIfSupported: true
         };
-        html5QrCode.start({facingMode:"environment"}, config, (txt)=>{
-            html5QrCode.pause(); processCheckin(type, txt);
-        }, ()=>{}).catch(e=>{ document.getElementById(el).innerHTML='<div class="text-red-500 p-8 text-center">เปิดกล้องไม่ได้</div>'; });
-    }
 
+        html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
+            // เมื่อสแกนเจอ
+            html5QrCode.pause();
+            processCheckin(type, txt);
+        }, (errorMessage) => {
+            // ไม่ต้องทำอะไรเมื่อยังไม่เจอ QR Code
+        }).catch(err => {
+            // กรณีเปิดกล้องไม่ได้
+            document.getElementById(el).innerHTML='<div class="text-red-500 p-8 text-center">ไม่สามารถเข้าถึงกล้องได้</div>';
+        });
+    }
     function updateDashboard(stats) { 
         if(!stats) return; 
+        // เช็คก่อนว่ามี Element นี้ไหม (เผื่อ Sponsor ไม่มี Dashboard)
         const totalEl = document.getElementById('stat-total');
         const checkinEl = document.getElementById('stat-checkin');
+        
         if (totalEl) totalEl.innerText = stats.total; 
         if (checkinEl) checkinEl.innerText = stats.checkin; 
     }
+    // --- SPONSOR MANUAL LOGIC ---
 
+    // 1. ฟังก์ชันสลับ Tab (Scan <-> Manual)
     function switchSponsorTab(mode) {
         const bg = document.getElementById('sp-toggle-bg');
         const scanSec = document.getElementById('sponsor-scan-section');
@@ -625,40 +735,53 @@
             scanSec.classList.add('hidden');
             manualSec.classList.remove('hidden');
             if(html5QrCode) try{html5QrCode.stop()}catch(e){}
+            
+            // เรียกฟังก์ชันล็อกวันทันทีที่กดเข้าหน้า Manual
             setupSponsorDateLock();
         }
     }
 
+    // 2. ฟังก์ชันล็อกวันที่อัตโนมัติ (Logic เดียวกับ Admin)
     function setupSponsorDateLock() {
         const today = new Date();
         const year = today.getFullYear();
         const month = today.getMonth() + 1;
         const day = today.getDate();
+        
         const dateSelect = document.getElementById('sp-input-date');
         
+        // ปลดล็อกก่อนเสมอ
         dateSelect.disabled = false;
+
+        // เช็คเงื่อนไข ก.พ. 2569 (2026)
         if (year === 2026 && month === 2) {
             if (day === 12) {
                 dateSelect.value = "12";
-                dateSelect.disabled = true; 
+                dateSelect.disabled = true; // ล็อกห้ามเปลี่ยน
             } else if (day === 13) {
                 dateSelect.value = "13";
-                dateSelect.disabled = true; 
+                dateSelect.disabled = true; // ล็อกห้ามเปลี่ยน
             }
         }
     }
 
+    // 3. ฟังก์ชันส่งรหัสตัดคูปอง
     function submitSponsorManual() {
         const idPart = document.getElementById('sp-input-id').value;
         const datePart = document.getElementById('sp-input-date').value;
         const indexPart = document.getElementById('sp-input-index').value;
 
+        // Validation
         if(idPart.length !== 4) { Swal.fire({icon:'warning', title:'รหัสผู้ใช้ต้อง 4 หลัก', timer:1500, showConfirmButton:false}); return; }
         if(!indexPart) { Swal.fire({icon:'warning', title:'ระบุลำดับคูปอง', timer:1500, showConfirmButton:false}); return; }
 
+        // ประกอบร่างรหัส: CVxxxx-12-1
         const fullCode = `CV${idPart}-${datePart}-${indexPart}`;
+        
+        // ส่งไปประมวลผลเหมือนการสแกน
         processCheckin('sponsor', fullCode);
         
+        // เคลียร์ค่า (เฉพาะส่วนที่เปลี่ยนบ่อย)
         document.getElementById('sp-input-id').value = '';
         document.getElementById('sp-input-index').value = '';
         document.getElementById('sp-input-id').focus();
