@@ -270,15 +270,16 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxldZnRE3QbH7NEKWLzoqs_cz_osoro40-JP89YjnGuQurGpR7uA1ToaDWrX-NDrKnZQQ/exec";
-
-// ฟังก์ชันกลางสำหรับติดต่อ Google Apps Script
+// ฟังก์ชันกลางสำหรับติดต่อ Google Apps Script (ฉบับแก้ไข CORS)
 async function callAPI(action, payload) {
     try {
-        // แสดง Loading (ถ้าต้องการ) หรือจัดการ UI ให้รู้ว่ากำลังโหลด
         const response = await fetch(API_URL, {
             method: 'POST',
+            // [สำคัญ] ต้องระบุแบบนี้เพื่อไม่ให้ Browser ส่ง Preflight Request (OPTIONS) ที่ทำให้ GAS เอ๋อ
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8", 
+            },
             body: JSON.stringify({ action: action, payload: payload })
-            // หมายเหตุ: GAS จะ Redirect 302 อัตโนมัติ fetch จะตามไปเอง
         });
         
         const result = await response.json();
