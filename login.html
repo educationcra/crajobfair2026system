@@ -662,25 +662,30 @@ function showCouponQR(code) {
     }
 
 function startScanner(el, type) {
+        // เคลียร์ของเก่าก่อนเริ่มใหม่
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
-        
+
         html5QrCode = new Html5Qrcode(el);
-        
-        // Config ใหม่: ปิดกรอบของ Library
+
         const config = {
             fps: 20,
+            // กำหนดขนาดพื้นที่สแกนเป็นสี่เหลี่ยมจัตุรัส (ตัวเลขต้องเท่ากัน)
             qrbox: { width: 250, height: 250 },
+            // [สำคัญมาก] บังคับอัตราส่วนเป็น 1:1 (สี่เหลี่ยมจัตุรัส)
             aspectRatio: 1.0,
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-            // [สำคัญ] เพิ่มบรรทัดนี้เพื่อซ่อนกรอบ Default
-            showTorchButtonIfSupported: true 
+            // ระบุให้หาเฉพาะ QR Code เท่านั้น
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
         };
 
         html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
-            html5QrCode.pause(); 
+            // เมื่อสแกนเจอ
+            html5QrCode.pause();
             processCheckin(type, txt);
-        }, () => {}).catch(err => {
-            document.getElementById(el).innerHTML = '<div class="text-red-500 p-8 text-center">เปิดกล้องไม่ได้</div>'; 
+        }, (errorMessage) => {
+            // ไม่ต้องทำอะไรเมื่อยังไม่เจอ QR Code
+        }).catch(err => {
+            // กรณีเปิดกล้องไม่ได้
+            document.getElementById(el).innerHTML='<div class="text-red-500 p-8 text-center">ไม่สามารถเข้าถึงกล้องได้</div>';
         });
     }
     function updateDashboard(stats) { 
