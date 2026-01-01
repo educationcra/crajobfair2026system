@@ -37,7 +37,25 @@
     .scanner-wrapper { position: relative; width: 100%; height: 320px; background: black; border-radius: 1rem; overflow: hidden; }
     #reader-admin, #reader-sponsor { width: 100%; height: 100%; object-fit: cover; }
     .scan-overlay { position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; }
-    .scan-box { width: 250px; height: 250px; position: relative; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7); border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); }
+   /* แก้ไข .scan-box ให้เป็นจัตุรัสเสมอ */
+    .scan-box {
+        width: 250px;
+        /* ลบ height: 250px; ของเดิมออก หรือแก้เป็น auto */
+        height: auto; 
+        /* เพิ่มบรรทัดนี้สำคัญมาก! บังคับสัดส่วน 1:1 */
+        aspect-ratio: 1 / 1; 
+        
+        position: relative;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); /* ปรับสีดำให้จางลงหน่อยจะได้เห็นภาพรอบๆ */
+        border-radius: 20px; /* ปรับมุมมนให้สวยขึ้น */
+        z-index: 30;
+    }
+
+    /* เพิ่ม CSS นี้เพื่อบังคับวิดีโอไม่ให้ยืด/หดจนเพี้ยน */
+    #reader-admin video, #reader-sponsor video {
+        object-fit: cover !important;
+        border-radius: 1rem;
+    }
     .scan-corner { position: absolute; width: 30px; height: 30px; border-style: solid; border-width: 4px; border-radius: 4px; }
     .c-tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
     .c-tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; }
@@ -666,15 +684,15 @@ function startScanner(el, type) {
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
 
         html5QrCode = new Html5Qrcode(el);
-
-        const config = {
+const config = {
             fps: 20,
-            // กำหนดขนาดพื้นที่สแกนเป็นสี่เหลี่ยมจัตุรัส (ตัวเลขต้องเท่ากัน)
+            // กำหนดขนาดพื้นที่รับภาพเป็นจัตุรัส
             qrbox: { width: 250, height: 250 },
-            // [สำคัญมาก] บังคับอัตราส่วนเป็น 1:1 (สี่เหลี่ยมจัตุรัส)
-            aspectRatio: 1.0,
-            // ระบุให้หาเฉพาะ QR Code เท่านั้น
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+            // บังคับสัดส่วน 1:1
+            aspectRatio: 1.0, 
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+            // ปิด UI เดิมของ Library (ถ้าทำได้)
+            showTorchButtonIfSupported: true
         };
 
         html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
