@@ -678,17 +678,23 @@ function showCouponQR(code) {
             customClass: { popup: 'rounded-[2rem] overflow-hidden' }
         });
     }
-
 function startScanner(el, type) {
         // เคลียร์ของเก่าก่อนเริ่มใหม่
         if(html5QrCode) try{html5QrCode.stop().then(()=>html5QrCode.clear())}catch(e){}
+
         html5QrCode = new Html5Qrcode(el);
-const config = {
-            fps: 20,
+        
+        const config = {
+            fps: 30, // [ปรับแก้ 1] เพิ่มเป็น 30 fps ให้ลื่นขึ้น
             qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0, 
             formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-            showTorchButtonIfSupported: true
+            showTorchButtonIfSupported: true,
+            
+            // [ปรับแก้ 2] ไม้ตาย! สั่งให้ใช้ระบบสแกนของตัวเครื่อง (Native) จะจับไวมาก
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
         };
 
         html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
