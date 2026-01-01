@@ -220,9 +220,9 @@
                           
                           <span class="text-gray-300 font-bold text-xl">-</span>
 
-                          <select id="sp-input-date" class="bg-gray-50 border-2 border-gray-200 text-gray-800 text-xl font-bold rounded-xl py-2 px-1 focus:border-orange-500 outline-none appearance-none text-center w-16">
-                              <option value="12">12</option>
-                              <option value="13">13</option>
+                          <select id="sp-input-date" class="bg-gray-50 border-2 border-gray-200 text-gray-800 text-xl font-bold rounded-xl py-2 pl-4 pr-8 focus:border-orange-500 outline-none appearance-none text-center w-20 relative z-10" style="text-align-last: center;">
+                          <option value="12">12</option>
+                          <option value="13">13</option>
                           </select>
 
                           <span class="text-gray-300 font-bold text-xl">-</span>
@@ -666,13 +666,14 @@ function startScanner(el, type) {
         
         html5QrCode = new Html5Qrcode(el);
         
-        // Config ใหม่: เร็วขึ้น + ตรงกรอบ
+        // Config ใหม่: ปิดกรอบของ Library
         const config = {
-            fps: 20, // เพิ่ม FPS (ของเดิม 10)
-            qrbox: { width: 250, height: 250 }, // ขนาดเท่ากรอบ CSS
+            fps: 20,
+            qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
-            // [สำคัญ] อ่านเฉพาะ QR Code (ตัด Barcode ทิ้ง)
-            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
+            formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+            // [สำคัญ] เพิ่มบรรทัดนี้เพื่อซ่อนกรอบ Default
+            showTorchButtonIfSupported: true 
         };
 
         html5QrCode.start({ facingMode: "environment" }, config, (txt) => {
