@@ -532,39 +532,77 @@ function switchView(role) {
         document.getElementById('manual-cv-input').value='';
     }
 
-// 1. แก้ processCheckin ให้เรียก addHistoryItem ของ Sponsor ด้วย
-// เปลี่ยนจาก google.script.run เป็น callAPI
-    async function processCheckin(type, content) { // เพิ่ม async
+    async function processCheckin(type, content) { 
+        // 1. [สำคัญ] ตอบสนองทันทีที่สแกนติด! (User จะรู้สึกว่ามันเร็วมาก)
+        if (navigator.vibrate) navigator.vibrate(200); // สั่น "ตึ๊ด!" 1 ครั้ง
+        
+        // 2. ขึ้นหน้าจอ "กำลังตรวจสอบ..." ทันที ไม่ต้องรอ Server
+        Swal.fire({
+            title: 'กำลังตรวจสอบ...',
+            html: 'กรุณารอสักครู่',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading(); // หมุนติ้วๆ ทันที
+            }
+        });
+
+        // 3. เตรียมข้อมูล
         let extraData = "";
         if (type === 'admin') extraData = selectedAdminDate; 
         else if (type === 'sponsor' && currentUser) extraData = currentUser.name; 
 
-        // หยุดกล้องชั่วคราว
+        // หยุดกล้องชั่วคราว (เพื่อไม่ให้สแกนซ้ำรัวๆ)
         if(type !== 'manual_admin' && html5QrCode) {
             try { html5QrCode.pause(); } catch(e) {}
         }
 
-        // เรียก API
+        // 4. ส่งข้อมูลไป Google (ช่วงเวลานี้ User จะเห็น Loading หมุนๆ แทนหน้าจอนิ่งๆ)
         const res = await callAPI('scan', {
             type: type,
             content: content,
             extraData: extraData
         });
 
+        // เตรียมเปิดกล้องใหม่เมื่อกดปิด Alert
         const resume = () => { 
             if(type !== 'manual_admin' && html5QrCode) {
                 try { html5QrCode.resume(); } catch(e) {}
             }
         };
 
+        // 5. แสดงผลลัพธ์จริงเมื่อ Server ตอบกลับมา
         if (res.status === 'success') {
-            Swal.fire({icon:'success', title:'สำเร็จ', text:res.message, confirmButtonText:'ตกลง', confirmButtonColor:'#f97316'}).then(resume);
+            // ปิด Loading อันเก่า แล้วโชว์ Success
+            Swal.fire({
+                icon: 'success', 
+                title: 'เรียบร้อย!', 
+                text: res.message, 
+                timer: 1500, // ปิดเองเร็วขึ้น (1.5 วิ)
+                showConfirmButton: false 
+            }).then(resume);
+            
             if(res.checkinData) addHistoryItem(res.checkinData, type);
+
         } else if (res.status === 'warning') {
-            Swal.fire({icon:'warning', title:'แจ้งเตือน', text:res.message, confirmButtonText:'ตกลง', confirmButtonColor:'#f59e0b'}).then(resume);
+            Swal.fire({
+                icon: 'warning', 
+                title: 'แจ้งเตือน', 
+                text: res.message, 
+                confirmButtonText: 'ตกลง', 
+                confirmButtonColor: '#f59e0b'
+            }).then(resume);
+            
             if(res.checkinData) addHistoryItem(res.checkinData, type);
+
         } else {
-            Swal.fire({icon:'error', title:'ผิดพลาด', text:res.message, confirmButtonText:'ตกลง', confirmButtonColor:'#ef4444'}).then(resume);
+            Swal.fire({
+                icon: 'error', 
+                title: 'เกิดข้อผิดพลาด', 
+                text: res.message, 
+                confirmButtonText: 'ลองใหม่', 
+                confirmButtonColor: '#ef4444'
+            }).then(resume);
         }
         
         if(res.dashboard) updateDashboard(res.dashboard);
