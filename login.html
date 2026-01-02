@@ -415,16 +415,17 @@ function switchView(role) {
 
     // ฟังก์ชันเริ่มดึงข้อมูลอัตโนมัติ (เรียกเมื่อเข้าหน้า User View)
     function startUserPolling() {
-        if (pollingInterval) clearInterval(pollingInterval); // เคลียร์ของเก่าก่อน
+if (pollingInterval) clearInterval(pollingInterval);
         
-        // ตั้งเวลาให้ดึงข้อมูลทุกๆ 3 วินาที (3000ms)
         pollingInterval = setInterval(async () => {
+            // ถ้าไม่มี User หรือ ID ไม่ต้องทำอะไร
             if (!currentUser || !currentUser.userData || !currentUser.userData.id) return;
 
-            // เรียก API แบบเงียบๆ (ไม่โชว์ Loading)
             try {
+                // 2. ยิง API ถามข้อมูลล่าสุดแบบเงียบๆ
                 const res = await fetch(API_URL, {
                     method: 'POST',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ 
                         action: 'get_user_update', 
                         payload: { userId: currentUser.userData.id } 
@@ -433,20 +434,64 @@ function switchView(role) {
                 const data = await res.json();
                 
                 if (data.status === 'success') {
-                    // เปรียบเทียบข้อมูลเก่ากับใหม่ ถ้าจำนวนคูปอง หรือ สถานะเปลี่ยน ให้เรนเดอร์ใหม่
-                    const oldJson = JSON.stringify(currentUser.userData.coupons);
-                    const newJson = JSON.stringify(data.coupons);
+                    const oldCoupons = currentUser.userData.coupons || [];
+                    const newCoupons = data.coupons || [];
                     
+                    // 3. แปลงเป็น String เพื่อเช็คว่ามีอะไรเปลี่ยนไหม (หัวใจสำคัญกันบัค!)
+                    const oldJson = JSON.stringify(oldCoupons);
+                    const newJson = JSON.stringify(newCoupons);
+                    
+                    // 4. เงื่อนไข: ถ้าข้อมูล "ไม่เหมือนเดิม" เท่านั้น ถึงจะทำงาน
                     if (oldJson !== newJson) {
                         console.log("Data updated!");
-                        currentUser.userData.coupons = data.coupons; // อัปเดตข้อมูลในตัวแปรหลัก
-                        renderUserPage(currentUser.userData); // วาดหน้าจอใหม่ทันที
+
+                        // --- A. ตรวจจับการเช็คอิน (จำนวนคูปองเพิ่มขึ้น) ---
+                        if (newCoupons.length > oldCoupons.length) {
+                            // หาดูว่าคูปองใหม่เป็นของวันไหน เพื่อแจ้งเตือนให้ถูกวัน
+                            const has12 = newCoupons.some(c => c.code.includes('-12-') && !oldCoupons.find(o => o.code === c.code));
+                            const has13 = newCoupons.some(c => c.code.includes('-13-') && !oldCoupons.find(o => o.code === c.code));
+                            
+                            let msg = "คุณได้รับคูปองอาหาร";
+                            if (has12 && has13) msg = "เช็คอินครบทั้ง 2 วันเรียบร้อย!";
+                            else if (has12) msg = "เช็คอินวันที่ 12 ก.พ. สำเร็จ!";
+                            else if (has13) msg = "เช็คอินวันที่ 13 ก.พ. สำเร็จ!";
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ยินดีต้อนรับ!',
+                                text: msg,
+                                timer: 3000,
+                                showConfirmButton: false,
+                                backdrop: `rgba(0,0,0,0.4)`
+                            });
+                        }
+
+                        // --- B. ตรวจจับการใช้คูปอง (สถานะเปลี่ยนจาก Active -> Used) ---
+                        oldCoupons.forEach(oldC => {
+                            const matchNew = newCoupons.find(n => n.code === oldC.code);
+                            // ถ้าใบเดิมเคย Active แต่ใบใหม่กลายเป็น Used
+                            if (matchNew && oldC.status === 'Active' && matchNew.status === 'Used') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'ใช้คูปองสำเร็จ!',
+                                    text: `คูปองรหัส ${oldC.code} ถูกใช้งานแล้ว`,
+                                    timer: 2500,
+                                    showConfirmButton: false
+                                });
+                            }
+                        });
+
+                        // 5. อัปเดตข้อมูลในตัวแปรหลักทันที (เพื่อให้รอบหน้า oldJson == newJson)
+                        currentUser.userData.coupons = newCoupons;
+                        
+                        // วาดหน้าจอใหม่
+                        renderUserPage(currentUser.userData);
                     }
                 }
-            } catch (e) {
-                console.error("Polling error", e);
+            } catch (e) { 
+                console.error("Polling error", e); 
             }
-        }, 3000); // 3 วินาที
+        }, 3000); // เช็คทุก 3 วินาที
     }
 
     // ฟังก์ชันหยุดดึงข้อมูล (เรียกเมื่อ Logout หรือสลับหน้า)
