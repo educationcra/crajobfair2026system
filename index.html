@@ -1104,6 +1104,14 @@ async function handleFormSubmit(e) {
 
       // 4. รวบรวมข้อมูลเป็น Object เดียวเตรียมส่ง
 // 4. สร้าง Object ข้อมูลเตรียมส่ง
+  let finalCurriculum = "";
+  const hiddenCurriculumInput = document.getElementById('curriculumInput');
+    const craSection = document.getElementById('field-cra-type'); // หรือ div ที่คลุมส่วน CRA
+  if (hiddenCurriculumInput && hiddenCurriculumInput.value !== "") {
+        finalCurriculum = hiddenCurriculumInput.value;}
+  else if (form.elements['genCurriculum'] && form.elements['genCurriculum'].value !== "") {
+        finalCurriculum = form.elements['genCurriculum'].value;
+    }
       const formData = {
          prefix: form.prefix.value, 
          fname: form.fname.value, 
@@ -1113,7 +1121,7 @@ async function handleFormSubmit(e) {
          institution: form.institution ? form.institution.value : "",
          workplace: form.workplace ? form.workplace.value : "",
          studentId: form.studentId ? form.studentId.value : "",
-         curriculum: document.getElementById('curriculumInput').value || form.genCurriculum ? form.genCurriculum.value : "",
+         curriculum:finalCurriculum,
          year: form.year.value || (form.genYear ? form.genYear.value : ""),
          department: form.department ? form.department.value : "",
          email: form.email.value, 
